@@ -35,7 +35,7 @@ LearnSync is an innovative adaptive learning assessment system that incorporates
 1. Clone the repository:
 
    ```bash
-   git clone https://github.com/isayanpal/LearnSync.git
+   git clone https://github.com/Kane-dylan/LearnSync.git
    ```
 
 ### Frontend Setup
