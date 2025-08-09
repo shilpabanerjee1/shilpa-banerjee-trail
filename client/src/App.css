@@ -1,0 +1,33 @@
+#root {
+  margin: 0 auto;
+  font-family: "Instrument Sans", sans-serif;
+}
+
+body {
+  background-color: #060e12;
+}
+
+.hide-scroll-bar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.hide-scroll-bar::-webkit-scrollbar {
+  display: none; 
+}
+
+.custom-radio {
+  appearance: none;
+  width: 15px;
+  height: 15px; 
+  background-color: transparent;
+  border-radius: 100%;
+  border: 2px solid #1D6F91;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.custom-radio:checked {
+  background-color: #1D6F91;
+  border: none;
+}
