@@ -21,12 +21,12 @@ export default function MCQCard({ questions = [] }) {
   };
 
   // Function to handle "Next" button click
-  const handleNextQuestion = () => {
-    if (currentQuestionIndex < questions.length - 1) {
-      setCurrentQuestionIndex(currentQuestionIndex + 1);
-      setSelectedOption(""); // Reset selected option
-    }
-  };
+  // const handleNextQuestion = () => {
+  //   if (currentQuestionIndex < questions.length - 1) {
+  //     setCurrentQuestionIndex(currentQuestionIndex + 1);
+  //     setSelectedOption(""); // Reset selected option
+  //   }
+  // };
 
   return (
     <div className="text-[#DCECF2] tracking-wider">
