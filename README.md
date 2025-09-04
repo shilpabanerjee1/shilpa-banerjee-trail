@@ -8,7 +8,7 @@
 
 LearnSync is an innovative adaptive learning assessment system that incorporates personality tests to detect disorders like ADHD, dyslexia, and autism, followed by personalized AI responses. This project aims to create a more inclusive and effective learning environment for all users.
 
-## 🚀 Live here - https://learn-sync-v1.vercel.app
+## 🚀 Live here - https://learn-sync-nine.vercel.app/chat
 
 ## 🌟 Features
 
@@ -45,21 +45,19 @@ LearnSync is an innovative adaptive learning assessment system that incorporates
    ```bash
    cd client
    ```
-
 2. Install dependencies:
 
    ```bash
    pnpm install
    ```
-
 3. Set up environment variables:
    Create a `.env` file in the client directory and add the following:
 
    ```
    VITE_API_BASE_URL=http://localhost:5000
    ```
-
 4. Start the development server:
+
    ```bash
    pnpm run dev
    ```
@@ -71,13 +69,11 @@ LearnSync is an innovative adaptive learning assessment system that incorporates
    ```bash
    cd server
    ```
-
 2. Install dependencies:
 
    ```bash
    pnpm install
    ```
-
 3. Set up environment variables:
    Create a `.env` file in the server directory and add the following:
 
@@ -88,8 +84,8 @@ LearnSync is an innovative adaptive learning assessment system that incorporates
    PORT=5000
    CORS_ORIGIN=http://localhost:5173
    ```
-
 4. Start the server:
+
    ```bash
    pnpm run dev
    ```
