@@ -27,7 +27,7 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/chat" element={token ? <ChatBotPage /> : <Login />} />
-          <Route path="/questions" element={<Question />} />
+          {/* <Route path="/questions" element={<Question />} /> */}
         </Route>
       </Routes>
     </Router>
