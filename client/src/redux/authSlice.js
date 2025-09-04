@@ -19,56 +19,75 @@ export const checkUserSession = createAsyncThunk(
 );
 
 //signup user
-export const signupUser = createAsyncThunk("auth/signup", async (userData) => {
-  try {
-    const response = await axios.post(
-      `${BASE_URL}/api/v1/auth/register`,
-      userData
-    );
-    return response.data;
-  } catch (error) {
-    console.log(error);
+export const signupUser = createAsyncThunk(
+  "auth/signup",
+  async (userData, { rejectWithValue }) => {
+    try {
+      const response = await axios.post(
+        `${BASE_URL}/api/v1/auth/register`,
+        userData
+      );
+      return response.data;
+    } catch (error) {
+      console.log(error);
+      const errorMessage =
+        error.response?.data?.message ||
+        error.response?.data ||
+        error.message ||
+        "Signup failed";
+      return rejectWithValue(errorMessage);
+    }
   }
-});
+);
 
 //login user
-export const loginUser = createAsyncThunk("auth/login", async (userData) => {
-  try {
-    const response = await axios.post(
-      `${BASE_URL}/api/v1/auth/login`,
-      userData
-    );
+export const loginUser = createAsyncThunk(
+  "auth/login",
+  async (userData, { rejectWithValue }) => {
+    try {
+      const response = await axios.post(
+        `${BASE_URL}/api/v1/auth/login`,
+        userData
+      );
 
-    return response.data;
-  } catch (error) {
-    console.log(error);
+      return response.data;
+    } catch (error) {
+      console.log(error);
+      const errorMessage =
+        error.response?.data?.message ||
+        error.response?.data ||
+        error.message ||
+        "Login failed";
+      return rejectWithValue(errorMessage);
+    }
   }
-});
+);
 
-//logout user
-// export const logoutUser = createAsyncThunk(
-//   "auth/logout",
-//   async (_, thunkAPI) => {
-//     try {
-//       await axios.post(
-//         `${BASE_URL}/api/v1/auth/logout`,
-//         {},
-//         {
-//           withCredentials: true,
-//         }
-//       );
-//       return null;
-//     } catch (error) {
-//       return thunkAPI.rejectWithValue("Logout failed");
-//     }
-//   }
-// );
+// logout user
+export const logoutUser = createAsyncThunk(
+  "auth/logout",
+  async (_, thunkAPI) => {
+    try {
+      await axios.post(
+        `${BASE_URL}/api/v1/auth/logout`,
+        {},
+        {
+          withCredentials: true,
+        }
+      );
+      return null;
+    } catch (error) {
+      return thunkAPI.rejectWithValue("Logout failed");
+    }
+  }
+);
 
 const initialState = {
   user: null,
   token: localStorage.getItem("token") || null,
   loading: false,
   error: null,
+  firstLoginQuestions: null,
 };
 
 //authSlice
@@ -77,7 +96,9 @@ const authSlice = createSlice({
   initialState,
   reducers: {
     logout: (state) => {
-      (state.user = null), (state.token = null);
+      state.user = null;
+      state.token = null;
+      state.firstLoginQuestions = null;
       localStorage.removeItem("token");
     },
   },
@@ -91,20 +112,22 @@ const authSlice = createSlice({
       })
       .addCase(signupUser.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.error.message;
+        state.error = { message: action.payload || action.error.message };
       })
       .addCase(loginUser.pending, (state) => {
         state.loading = true;
+        state.error = null;
       })
       .addCase(loginUser.fulfilled, (state, action) => {
         state.loading = false;
         state.user = action.payload.user;
         state.token = action.payload.token;
+        state.firstLoginQuestions = action.payload.firstLoginQuestions;
         localStorage.setItem("token", action.payload.token);
       })
       .addCase(loginUser.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.error.message;
+        state.error = { message: action.payload || action.error.message };
       })
       .addCase(checkUserSession.fulfilled, (state, action) => {
         state.user = action.payload;

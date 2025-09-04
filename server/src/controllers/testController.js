@@ -5,92 +5,133 @@ const { analyzeDisorders } = require("../utils/aiService.js");
 const submitAnswers = async (req, res) => {
   const userId = req.user._id;
   const { answers } = req.body; // Array of new answers from the frontend
-    // console.log(answers)
-  // Find the user by ID
-  const user = await User.findById(userId);
 
-  // Get the current number of questions the user has already answered
-  const currentQuestionsAnswered = user.questionsAnswered;
+  try {
+    // Use retry logic for version conflicts
+    let retries = 3;
+    let user;
 
-  // Slice the questions based on how many the user has answered so far
-  const questionSlice = questions.slice(
-    currentQuestionsAnswered,
-    currentQuestionsAnswered + answers.length
-  );
-  
-  // Pair the user's new answers with the respective questions
-  const newQuestionAnswerPairs = answers.map((answer, index) => ({
-    question: questionSlice[index].question,
-    options: questionSlice[index].options,
-    answer: answer,
-  }));
-  console.log(newQuestionAnswerPairs)
-  // Retrieve the user's previous answers from the user model
-  const previousQuestionAnswerPairs = user.answers.map((answer, index) => ({
-    question: questions[index].question, // Map to the question from the question bank
-    options: questions[index].options, // Fetch the options
-    answer: answer, // Use the stored user's previous answer
-  }));
+    while (retries > 0) {
+      try {
+        // Find the user by ID (get fresh copy each retry)
+        user = await User.findById(userId);
 
-  // Combine previous and new question-answer pairs for analysis
-  const combinedQuestionAnswerPairs = [
-    ...previousQuestionAnswerPairs,
-    ...newQuestionAnswerPairs,
-  ];
-  console.log(combinedQuestionAnswerPairs)
-  // Update the number of questions answered
-  user.questionsAnswered += answers.length;
+        if (!user) {
+          return res.status(404).json({ message: "User not found" });
+        }
 
-  // Analyze disorders based on combined answers
-  const { adhdScore, autismScore, dyslexiaScore } = await analyzeDisorders(
-    combinedQuestionAnswerPairs
-  );
+        // Get the current number of questions the user has already answered
+        const currentQuestionsAnswered = user.questionsAnswered;
 
-  // Add detected disorders if the scores exceed the threshold
-  if (adhdScore > 5 && !user.detectedDisorders.includes("ADHD")) {
-    user.detectedDisorders.push("ADHD");
-  }
-  if (autismScore > 5 && !user.detectedDisorders.includes("Autism")) {
-    user.detectedDisorders.push("Autism");
-  }
-  if (dyslexiaScore > 5 && !user.detectedDisorders.includes("Dyslexia")) {
-    user.detectedDisorders.push("Dyslexia");
-  }
+        // Slice the questions based on how many the user has answered so far
+        const questionSlice = questions.slice(
+          currentQuestionsAnswered,
+          currentQuestionsAnswered + answers.length
+        );
 
-  // Update the test results in the user model
-  user.testResults = {
-    adhdScore: adhdScore,
-    autismScore: autismScore,
-    dyslexiaScore: dyslexiaScore,
-  };
+        // Pair the user's new answers with the respective questions
+        const newQuestionAnswerPairs = answers.map((answer, index) => ({
+          question: questionSlice[index].question,
+          options: questionSlice[index].options,
+          answer: answer,
+        }));
+        console.log(newQuestionAnswerPairs);
 
-  // Append new answers to the user's existing answers array
-  user.answers = [...user.answers, ...answers];
+        // Retrieve the user's previous answers from the user model
+        const previousQuestionAnswerPairs = user.answers.map(
+          (answer, index) => ({
+            question: questions[index].question, // Map to the question from the question bank
+            options: questions[index].options, // Fetch the options
+            answer: answer, // Use the stored user's previous answer
+          })
+        );
 
-  const totalQuestions = questions.length;
-  if (user.questionsAnswered >= totalQuestions) {
-    // Remove disorders if their scores are less than 6
-    if (adhdScore <= 5 && user.detectedDisorders.includes("ADHD")) {
-      user.detectedDisorders = user.detectedDisorders.filter(
-        (disorder) => disorder !== "ADHD"
-      );
+        // Combine previous and new question-answer pairs for analysis
+        const combinedQuestionAnswerPairs = [
+          ...previousQuestionAnswerPairs,
+          ...newQuestionAnswerPairs,
+        ];
+        console.log(combinedQuestionAnswerPairs);
+
+        // Update the number of questions answered
+        user.questionsAnswered += answers.length;
+
+        // Analyze disorders based on combined answers
+        const { adhdScore, autismScore, dyslexiaScore } =
+          await analyzeDisorders(combinedQuestionAnswerPairs);
+
+        // Add detected disorders if the scores exceed the threshold
+        if (adhdScore > 5 && !user.detectedDisorders.includes("ADHD")) {
+          user.detectedDisorders.push("ADHD");
+        }
+        if (autismScore > 5 && !user.detectedDisorders.includes("Autism")) {
+          user.detectedDisorders.push("Autism");
+        }
+        if (dyslexiaScore > 5 && !user.detectedDisorders.includes("Dyslexia")) {
+          user.detectedDisorders.push("Dyslexia");
+        }
+
+        // Update the test results in the user model
+        user.testResults = {
+          adhdScore: adhdScore,
+          autismScore: autismScore,
+          dyslexiaScore: dyslexiaScore,
+        };
+
+        // Append new answers to the user's existing answers array
+        user.answers = [...user.answers, ...answers];
+
+        const totalQuestions = questions.length;
+        if (user.questionsAnswered >= totalQuestions) {
+          // Remove disorders if their scores are less than 6
+          if (adhdScore <= 5 && user.detectedDisorders.includes("ADHD")) {
+            user.detectedDisorders = user.detectedDisorders.filter(
+              (disorder) => disorder !== "ADHD"
+            );
+          }
+          if (autismScore <= 5 && user.detectedDisorders.includes("Autism")) {
+            user.detectedDisorders = user.detectedDisorders.filter(
+              (disorder) => disorder !== "Autism"
+            );
+          }
+          if (
+            dyslexiaScore <= 5 &&
+            user.detectedDisorders.includes("Dyslexia")
+          ) {
+            user.detectedDisorders = user.detectedDisorders.filter(
+              (disorder) => disorder !== "Dyslexia"
+            );
+          }
+        }
+
+        // Save the updated user information
+        await user.save();
+
+        // If we reach here, save was successful, break out of retry loop
+        break;
+      } catch (error) {
+        if (error.name === "VersionError" && retries > 1) {
+          console.log(
+            `Version conflict, retrying... (${retries - 1} retries left)`
+          );
+          retries--;
+          // Wait a small amount before retrying
+          await new Promise((resolve) => setTimeout(resolve, 100));
+          continue;
+        } else {
+          throw error; // Re-throw if it's not a version error or no retries left
+        }
+      }
     }
-    if (autismScore <= 5 && user.detectedDisorders.includes("Autism")) {
-      user.detectedDisorders = user.detectedDisorders.filter(
-        (disorder) => disorder !== "Autism"
-      );
-    }
-    if (dyslexiaScore <= 5 && user.detectedDisorders.includes("Dyslexia")) {
-      user.detectedDisorders = user.detectedDisorders.filter(
-        (disorder) => disorder !== "Dyslexia"
-      );
-    }
-  }
-  // Save the updated user information
-  await user.save();
 
-  // Send response with updated user and detected disorders
-  res.json({ user, detectedDisorders: user.detectedDisorders });
+    // Send response with updated user and detected disorders
+    res.json({ user, detectedDisorders: user.detectedDisorders });
+  } catch (error) {
+    console.error("Error in submitAnswers:", error);
+    res.status(500).json({
+      message: error.message || "An error occurred while submitting answers",
+    });
+  }
 };
 
 module.exports = { submitAnswers };
