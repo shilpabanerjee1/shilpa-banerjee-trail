@@ -49,7 +49,7 @@ LearnSync is an innovative adaptive learning assessment system that incorporates
 2. Install dependencies:
 
    ```bash
-   npm install
+   pnpm install
    ```
 
 3. Set up environment variables:
@@ -61,7 +61,7 @@ LearnSync is an innovative adaptive learning assessment system that incorporates
 
 4. Start the development server:
    ```bash
-   npm run dev
+   pnpm run dev
    ```
 
 ### Backend Setup
@@ -75,7 +75,7 @@ LearnSync is an innovative adaptive learning assessment system that incorporates
 2. Install dependencies:
 
    ```bash
-   npm install
+   pnpm install
    ```
 
 3. Set up environment variables:
@@ -91,7 +91,7 @@ LearnSync is an innovative adaptive learning assessment system that incorporates
 
 4. Start the server:
    ```bash
-   npm run dev
+   pnpm run dev
    ```
 
 ## 🌐 API Endpoints
